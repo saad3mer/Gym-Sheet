@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym Day</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff9800">
+
+<style>
+body{margin:0;background:#0b0b0b;color:#fff;font-family:system-ui;}
+.container{padding:16px;}
+h2{text-align:center;}
+.exercise-card{
+  background:#1a1a1a;
+  margin:12px 0;
+  padding:12px;
+  border-radius:12px;
+}
+.exercise-card h3{text-align:center;margin:0 0 8px 0;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #222;padding:6px;text-align:center;font-size:14px;}
+td input{width:100%;background:#111;border:none;color:#fff;text-align:center;}
+td input:focus{outline:1px solid #ff9800;}
+button{background:#ff9800;border:none;padding:6px 12px;border-radius:8px;margin-top:6px;}
+tr.done td{background:#0f0f0f;color:#aaa;}
+.container{overflow-x:auto;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2 id="dayTitle">🏋️ تمرينات اليوم</h2>
+  <div id="exercises"></div>
+  <button onclick="addExercise()">➕ إضافة تمرين جديد</button>
+</div>
+
+<script>
+let currentDay=localStorage.getItem("currentDay")||"Saturday";
+document.getElementById("dayTitle").innerText="🏋️ "+currentDay;
+let gymData=JSON.parse(localStorage.getItem("gymData"))||{};
+if(!gymData[currentDay]) gymData[currentDay]={};
+
+function save(){localStorage.setItem("gymData",JSON.stringify(gymData));}
+
+function render(){
+  const container=document.getElementById("exercises");
+  container.innerHTML="";
+  for(let ex in gymData[currentDay]){
+    const card=document.createElement("div");
+    card.className="exercise-card";
+    card.innerHTML=`<h3>${ex}</h3>
+      <table>
+      <thead>
+        <tr><th>المجموعة</th><th>الوزن</th><th>العدات</th><th>✔</th></tr>
+      </thead>
+      <tbody></tbody>
+      </table>
+      <button onclick="addSet('${ex}')">➕ إضافة مجموعة</button>
+    `;
+    const tbody=card.querySelector("tbody");
+    gymData[currentDay][ex].forEach((set,i)=>{
+      const tr=document.createElement("tr");
+      tr.className=set.done?'done':'';
+      tr.innerHTML=`
+        <td><input type="number" value="${set.set}" onchange="updateSet('${ex}',${i},'set',this.value)"></td>
+        <td><input type="number" value="${set.weight}" onchange="updateSet('${ex}',${i},'weight',this.value)"></td>
+        <td><input type="number" value="${set.reps}" onchange="updateSet('${ex}',${i},'reps',this.value)"></td>
+        <td><input type="checkbox" ${set.done?'checked':''} onchange="toggleSet('${ex}',${i})"></td>
+      `;
+      let startX=0;
+      tr.addEventListener('touchstart',e=>{startX=e.touches[0].clientX});
+      tr.addEventListener('touchend',e=>{
+        let endX=e.changedTouches[0].clientX;
+        if(endX-startX>80){
+          if(confirm("🔥 تحذف المجموعة دي؟")){
+            gymData[currentDay][ex].splice(i,1);
+            save(); render();
+          }
+        }
+      });
+      tbody.appendChild(tr);
+    });
+    container.appendChild(card);
+  }
+}
+
+function addExercise(){
+  let name=prompt("اسم التمرين الجديد:");
+  if(!name) return;
+  if(!gymData[currentDay][name]) gymData[currentDay][name]=[];
+  save(); render();
+}
+
+function addSet(ex){
+  gymData[currentDay][ex].push({set:gymData[currentDay][ex].length+1,weight:"",reps:"",done:false});
+  save(); render();
+}
+
+function updateSet(ex,i,key,val){
+  gymData[currentDay][ex][i][key]=val;
+  save();
+}
+function toggleSet(ex,i){
+  gymData[currentDay][ex][i].done=!gymData[currentDay][ex][i].done;
+  save(); render();
+}
+
+render();
+</script>
+
+</body>
+</html>
