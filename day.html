@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gym Day</title>
 
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ff9800">
 
@@ -124,5 +126,13 @@ function deleteExercise(ex){
 render();
 </script>
 
+<script>
+// Service Worker Offline
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+  
 </body>
 </html>
