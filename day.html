@@ -10,7 +10,7 @@
 
 <style>
 body{margin:0;background:#0b0b0b;color:#fff;font-family:system-ui;}
-.container{padding:16px;}
+.container{padding:16px; overflow-x:auto;}
 h2{text-align:center;}
 .exercise-card{
   background:#1a1a1a;
@@ -23,9 +23,9 @@ table{width:100%;border-collapse:collapse;}
 th,td{border:1px solid #222;padding:6px;text-align:center;font-size:14px;}
 td input{width:100%;background:#111;border:none;color:#fff;text-align:center;}
 td input:focus{outline:1px solid #ff9800;}
-button{background:#ff9800;border:none;padding:6px 12px;border-radius:8px;margin-top:6px;}
+button{background:#ff9800;border:none;padding:6px 12px;border-radius:8px;margin-top:6px;cursor:pointer;}
+button.delete{background:#ff4444;}
 tr.done td{background:#0f0f0f;color:#aaa;}
-.container{overflow-x:auto;}
 </style>
 </head>
 <body>
@@ -57,6 +57,7 @@ function render(){
       <tbody></tbody>
       </table>
       <button onclick="addSet('${ex}')">➕ إضافة مجموعة</button>
+      <button class="delete" onclick="deleteExercise('${ex}')">🗑️ حذف التمرين</button>
     `;
     const tbody=card.querySelector("tbody");
     gymData[currentDay][ex].forEach((set,i)=>{
@@ -68,6 +69,7 @@ function render(){
         <td><input type="number" value="${set.reps}" onchange="updateSet('${ex}',${i},'reps',this.value)"></td>
         <td><input type="checkbox" ${set.done?'checked':''} onchange="toggleSet('${ex}',${i})"></td>
       `;
+      // Swipe يمين لحذف المجموعة
       let startX=0;
       tr.addEventListener('touchstart',e=>{startX=e.touches[0].clientX});
       tr.addEventListener('touchend',e=>{
@@ -85,6 +87,7 @@ function render(){
   }
 }
 
+// إضافة تمرين جديد
 function addExercise(){
   let name=prompt("اسم التمرين الجديد:");
   if(!name) return;
@@ -92,18 +95,30 @@ function addExercise(){
   save(); render();
 }
 
+// إضافة مجموعة داخل تمرين
 function addSet(ex){
   gymData[currentDay][ex].push({set:gymData[currentDay][ex].length+1,weight:"",reps:"",done:false});
   save(); render();
 }
 
+// تحديث بيانات المجموعة
 function updateSet(ex,i,key,val){
   gymData[currentDay][ex][i][key]=val;
   save();
 }
+
+// تفعيل/إلغاء تم عمل المجموعة
 function toggleSet(ex,i){
   gymData[currentDay][ex][i].done=!gymData[currentDay][ex][i].done;
   save(); render();
+}
+
+// حذف تمرين كامل
+function deleteExercise(ex){
+  if(confirm("🔥 تحذف التمرين كله؟")){
+    delete gymData[currentDay][ex];
+    save(); render();
+  }
 }
 
 render();
