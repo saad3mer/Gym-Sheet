@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gym Sheet</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff9800">
+
 <style>
 body{
   margin:0;
@@ -15,9 +18,7 @@ body{
 .container{
   padding:16px;
 }
-h2{
-  margin-top:0;
-}
+h2{margin-top:0;}
 table{
   width:100%;
   border-collapse:collapse;
@@ -33,7 +34,7 @@ th{
   background:#1a1a1a;
   color:#ff9800;
 }
-td input, td select{
+td input{
   width:100%;
   background:#111;
   border:none;
@@ -51,9 +52,7 @@ button{
   font-weight:700;
   margin-top:10px;
 }
-.done{
-  background:#1a1a1a;
-}
+tr.done td{background:#1a1a1a;color:#aaa;}
 </style>
 </head>
 
@@ -82,51 +81,53 @@ button{
 const tbody=document.querySelector("tbody");
 let data=JSON.parse(localStorage.getItem("gymSheet"))||[];
 
-function save(){
-  localStorage.setItem("gymSheet",JSON.stringify(data));
-}
+function save(){localStorage.setItem("gymSheet",JSON.stringify(data));}
 
 function render(){
   tbody.innerHTML="";
   data.forEach((r,i)=>{
-    tbody.innerHTML+=`
-      <tr class="${r.done?'done':''}">
-        <td><input value="${r.day}" onchange="update(${i},'day',this.value)"></td>
-        <td><input value="${r.exercise}" onchange="update(${i},'exercise',this.value)"></td>
-        <td><input type="number" value="${r.set}" onchange="update(${i},'set',this.value)"></td>
-        <td><input type="number" value="${r.weight}" onchange="update(${i},'weight',this.value)"></td>
-        <td><input type="number" value="${r.reps}" onchange="update(${i},'reps',this.value)"></td>
-        <td>
-          <input type="checkbox" ${r.done?'checked':''} onchange="toggle(${i})">
-        </td>
-      </tr>
+    const tr=document.createElement("tr");
+    tr.className=r.done?'done':'';
+    tr.innerHTML=`
+      <td><input value="${r.day}" onchange="update(${i},'day',this.value)"></td>
+      <td><input value="${r.exercise}" onchange="update(${i},'exercise',this.value)"></td>
+      <td><input type="number" value="${r.set}" onchange="update(${i},'set',this.value)"></td>
+      <td><input type="number" value="${r.weight}" onchange="update(${i},'weight',this.value)"></td>
+      <td><input type="number" value="${r.reps}" onchange="update(${i},'reps',this.value)"></td>
+      <td><input type="checkbox" ${r.done?'checked':''} onchange="toggle(${i})"></td>
     `;
+    // Swipe to delete
+    let startX=0;
+    tr.addEventListener('touchstart', e=>{startX=e.touches[0].clientX});
+    tr.addEventListener('touchend', e=>{
+      let endX=e.changedTouches[0].clientX;
+      if(endX - startX > 80){ // swipe right
+        if(confirm("🔥 تحذف المجموعة دي؟")){
+          data.splice(i,1);
+          save(); render();
+        }
+      }
+    });
+    tbody.appendChild(tr);
   });
 }
 
 function addRow(){
-  data.push({
-    day:"",
-    exercise:"",
-    set:1,
-    weight:"",
-    reps:"",
-    done:false
-  });
+  data.push({day:"",exercise:"",set:1,weight:"",reps:"",done:false});
   save(); render();
 }
 
-function update(i,key,val){
-  data[i][key]=val;
-  save();
-}
-
-function toggle(i){
-  data[i].done=!data[i].done;
-  save(); render();
-}
+function update(i,key,val){data[i][key]=val; save();}
+function toggle(i){data[i].done=!data[i].done; save(); render();}
 
 render();
 </script>
+
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
 </body>
 </html>
